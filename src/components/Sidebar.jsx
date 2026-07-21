@@ -1,3 +1,5 @@
+import Logo from './Logo'
+
 export default function Sidebar({
   chats,
   activeId,
@@ -14,7 +16,7 @@ export default function Sidebar({
       <aside className={`sidebar ${open ? 'open' : ''}`}>
         <div className="sidebar-top">
           <div className="brand">
-            <span className="brand-dot" />
+            <Logo size={22} />
             CodeEasy
           </div>
           <button className="icon-btn" onClick={onNew} title="New chat (⌘K)" type="button">

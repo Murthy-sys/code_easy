@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Sidebar from './components/Sidebar'
 import Settings from './components/Settings'
 import Composer from './components/Composer'
-import Markdown from './components/Markdown'
+import Logo from './components/Logo'
+import Message from './components/Message'
 import Workspace from './components/Workspace'
 import ToolCard from './components/ToolCard'
 import { runAgent } from './lib/agent'
@@ -164,17 +165,19 @@ export default function App() {
     abortRef.current?.abort()
   }
 
-  const send = async (textOverride) => {
+  const send = async (textOverride, baseOverride) => {
     const text = (textOverride ?? input).trim()
     if (!text || busy || !settings.model) return
 
     const chat = active ?? startNewChat()
+    // Regenerating passes a truncated history; `active` here is still the stale one.
+    const base = baseOverride ?? chat.messages
     const userEntry = { id: crypto.randomUUID(), role: 'user', content: text }
-    const entries = [...chat.messages, userEntry]
+    const entries = [...base, userEntry]
 
     patchChat(chat.id, (c) => ({
       ...c,
-      title: c.messages.length === 0 ? titleFrom(text) : c.title,
+      title: base.length === 0 ? titleFrom(text) : c.title,
       messages: entries,
     }))
 
@@ -222,6 +225,16 @@ export default function App() {
     }
   }
 
+  /** Rewind to the last user message and ask again. */
+  const regenerate = () => {
+    if (!active || busy) return
+    const lastUser = active.messages.findLastIndex((m) => m.role === 'user')
+    if (lastUser === -1) return
+
+    const truncated = active.messages.slice(0, lastUser)
+    send(active.messages[lastUser].content, truncated)
+  }
+
   const decide = (approved) => {
     pending?.resolve(approved)
     setPending(null)
@@ -229,6 +242,7 @@ export default function App() {
 
   const messages = active?.messages ?? []
   const suggestions = agentMode ? AGENT_SUGGESTIONS : SUGGESTIONS
+  const lastAssistantId = messages.findLast((m) => m.role === 'assistant')?.id
 
   return (
     <div className="app">
@@ -271,6 +285,7 @@ export default function App() {
         <div className="thread">
           {messages.length === 0 ? (
             <div className="welcome">
+              <Logo size={56} className="welcome-logo" />
               <h1>{agentMode ? `Working in ${workspace.name}` : 'What can I help with?'}</h1>
               <p>
                 {agentMode
@@ -296,24 +311,16 @@ export default function App() {
                     onReject={() => decide(false)}
                   />
                 ) : (
-                  <article key={m.id} className={`message ${m.role}`}>
-                    <div className="avatar">{m.role === 'user' ? 'You' : 'AI'}</div>
-                    <div className="bubble">
-                      {m.role === 'assistant' ? (
-                        m.content ? (
-                          <Markdown>{m.content}</Markdown>
-                        ) : (
-                          <span className="typing">
-                            <i />
-                            <i />
-                            <i />
-                          </span>
-                        )
-                      ) : (
-                        <p className="user-text">{m.content}</p>
-                      )}
-                    </div>
-                  </article>
+                  <Message
+                    key={m.id}
+                    entry={m}
+                    // Only the newest reply is regenerable, as in ChatGPT.
+                    onRegenerate={
+                      !busy && m.role === 'assistant' && m.id === lastAssistantId
+                        ? () => regenerate()
+                        : undefined
+                    }
+                  />
                 ),
               )}
               <div ref={bottomRef} />

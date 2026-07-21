@@ -32,12 +32,8 @@
   letter-spacing: -0.01em;
 }
 
-.brand-dot {
-  width: 11px;
-  height: 11px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent), #22d3ee);
-  box-shadow: 0 0 12px var(--accent-soft);
+.brand svg {
+  flex-shrink: 0;
 }
 
 .icon-btn {
@@ -198,6 +194,11 @@
   text-align: center;
 }
 
+.welcome-logo {
+  margin: 0 auto 18px;
+  display: block;
+}
+
 .welcome h1 {
   font-size: clamp(28px, 4vw, 40px);
   letter-spacing: -0.02em;
@@ -240,52 +241,80 @@
   padding: 28px 24px 12px;
   display: flex;
   flex-direction: column;
-  gap: 26px;
+  gap: 24px;
 }
 
 .message {
   display: flex;
-  gap: 14px;
-  align-items: flex-start;
+  flex-direction: column;
 }
 
-.avatar {
-  flex-shrink: 0;
-  width: 30px;
-  height: 30px;
-  border-radius: 9px;
-  display: grid;
-  place-items: center;
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  border: 1px solid var(--border);
-  background: var(--bg-elev);
-  color: var(--text-dim);
-}
-.message.assistant .avatar {
-  background: linear-gradient(135deg, var(--accent), #22d3ee);
-  border-color: transparent;
-  color: #fff;
+/* User turns sit right-aligned in a bubble, with no avatar. */
+.message.user {
+  align-items: flex-end;
 }
 
-.bubble {
-  min-width: 0;
-  flex: 1;
-  padding-top: 2px;
-}
-
-.message.user .bubble {
+.user-bubble {
+  max-width: 78%;
+  padding: 10px 16px;
+  border-radius: 20px;
   background: var(--bubble-user);
-  border-radius: 14px;
-  padding: 10px 15px;
-  flex: 0 1 auto;
-}
-
-.user-text {
-  margin: 0;
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+/* Assistant turns run full width as plain prose. */
+.message.assistant {
+  align-items: stretch;
+}
+
+.assistant-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 7px;
+}
+
+.assistant-mark {
+  flex-shrink: 0;
+}
+
+.assistant-name {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.assistant-body {
+  min-width: 0;
+  padding-left: 33px; /* aligns prose under the name, not the mark */
+}
+
+.msg-actions {
+  display: flex;
+  gap: 2px;
+  margin-top: 6px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.message.assistant:hover .msg-actions,
+.msg-actions:focus-within {
+  opacity: 1;
+}
+
+.msg-actions button {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-dim);
+}
+.msg-actions button:hover {
+  background: var(--bg-elev);
+  color: var(--text);
 }
 
 .typing {
@@ -827,6 +856,8 @@
   background: var(--bg-elev);
   overflow: hidden;
   font-size: 13.5px;
+  margin-left: 33px; /* line up with the assistant's prose */
+  width: calc(100% - 33px);
 }
 .tool-card.waiting {
   border-color: var(--accent);
